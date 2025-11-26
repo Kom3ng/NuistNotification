@@ -1,0 +1,79 @@
+package moe.okay.nuistnotification
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import kotlinx.serialization.Serializable
+import moe.okay.nuistnotification.ui.screens.NotificationScreen
+import moe.okay.nuistnotification.ui.screens.NotificationScreenViewModel
+import moe.okay.nuistnotification.ui.theme.NuistNotificationTheme
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            val navController = rememberNavController()
+            NuistNotificationTheme {
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
+                        NavigationBar {
+                            NavigationBarItem(
+                                selected = true,
+                                onClick = { /*TODO*/ },
+                                label = { Text("通知") },
+                                icon = { Icon(Icons.Default.Home, "home") },
+                            )
+                        }
+                    }
+                ) { innerPadding ->
+                    AppNavHost(
+                        // modifier = Modifier.padding(innerPadding),
+                        navController = navController,
+                        )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AppNavHost(modifier: Modifier = Modifier, navController: NavHostController) {
+    val notificationScreenViewModel: NotificationScreenViewModel = viewModel()
+    NavHost(
+        navController = navController,
+        startDestination = Notifications,
+        modifier = modifier,
+    ) {
+        composable<Notifications> {
+            LaunchedEffect(Unit) {
+                notificationScreenViewModel.loadData()
+            }
+            NotificationScreen(notificationScreenViewModel)
+        }
+    }
+}
+
+@Serializable
+object Notifications
