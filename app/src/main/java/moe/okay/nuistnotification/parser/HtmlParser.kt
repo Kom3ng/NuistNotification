@@ -1,5 +1,6 @@
 package moe.okay.nuistnotification.parser
 
+import android.net.Uri
 import android.util.Log
 import moe.okay.nuistnotification.data.Notification
 import org.jsoup.nodes.Document
@@ -14,8 +15,10 @@ object HtmlParser {
                 val title = tmp.attr("title")
                 val publisher = e.selectFirst(".news_org a")?.text() ?: return@map null
                 val date = e.selectFirst(".news_date span")?.text() ?: return@map null
-
+                val uri = Uri.parse(url)
                 Notification(
+                    treeId = uri.getQueryParameter("wbtreeid")?.toIntOrNull() ?: return@map null,
+                    id = uri.getQueryParameter("wbnewsid")?.toIntOrNull() ?: return@map null,
                     title = title,
                     date = date,
                     url = url,

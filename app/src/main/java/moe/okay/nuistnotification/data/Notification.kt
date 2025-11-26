@@ -4,6 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Notification(
+    val treeId: Int,
+    val id: Int,
     val title: String,
     val category: Category,
     val date: String,
