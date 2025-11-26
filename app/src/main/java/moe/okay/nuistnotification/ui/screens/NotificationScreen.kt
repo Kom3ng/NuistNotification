@@ -1,10 +1,12 @@
 package moe.okay.nuistnotification.ui.screens
 
+import android.R
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +21,7 @@ import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -48,7 +51,7 @@ fun NotificationScreen(
                 if (state.notifications.isEmpty()) {
                     EmptyContent()
                 } else {
-                    ListContent(
+                    NotificationsContent(
                         items = state.notifications,
                         onItemClick = onItemClick
                     )
@@ -125,7 +128,7 @@ private fun ErrorContent(
 }
 
 @Composable
-private fun ListContent(
+private fun NotificationsContent(
     items: List<Notification>,
     onItemClick: (Notification) -> Unit
 ) {
@@ -138,7 +141,7 @@ private fun ListContent(
             items = items,
             key = { it.hashCode() }
         ) { item ->
-            ListItemCard(
+            NotificationCard(
                 item = item,
                 onClick = { onItemClick(item) }
             )
@@ -147,15 +150,14 @@ private fun ListContent(
 }
 
 @Composable
-private fun ListItemCard(
+private fun NotificationCard(
     item: Notification,
     onClick: () -> Unit
 ) {
-    Card(
+    OutlinedCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
@@ -163,31 +165,26 @@ private fun ListItemCard(
                 .padding(16.dp)
         ) {
             Text(
-                text = item.title,
+                text = "[${item.category.displayName}] ${item.title}",
                 style = MaterialTheme.typography.titleMedium,
-                maxLines = 2,
+                maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )
 
-            if (item.title.isNotBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
                 Text(
-                    text = item.title,
-                    style = MaterialTheme. typography.bodyMedium,
-                    color = MaterialTheme. colorScheme.onSurfaceVariant,
-                    maxLines = 3,
-                    overflow = TextOverflow. Ellipsis
-                )
-            }
-
-            if (item.url.isNotBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = item.url,
-                    style = MaterialTheme.typography.bodySmall,
+                    text = item.category.displayName,
                     color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow. Ellipsis
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = item.date,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
         }
