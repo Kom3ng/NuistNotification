@@ -85,7 +85,7 @@ fun AppNavHost(modifier: Modifier = Modifier, navController: NavHostController) 
     ) {
         composable<Notifications> {
             LaunchedEffect(Unit) {
-                notificationScreenViewModel.loadData()
+                notificationScreenViewModel.refresh()
             }
             NotificationScreen(notificationScreenViewModel)
         }

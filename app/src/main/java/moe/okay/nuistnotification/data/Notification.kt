@@ -1,5 +1,7 @@
 package moe.okay.nuistnotification.data
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -28,5 +30,44 @@ data class Notification(
         CampusActivities("校园活动"),
         CollegeNews("学院动态"),
         Other("其他"),
+    }
+}
+
+@Entity(tableName = "notifications")
+data class NotificationEntity(
+    val treeId: Int,
+    @PrimaryKey val id: Int,
+    val title: String,
+    val category: String,
+    val date: String,
+    val url: String,
+    val publisher: String,
+) {
+    companion object {
+        fun from(notification: Notification): NotificationEntity {
+            return NotificationEntity(
+                treeId = notification.treeId,
+                id = notification.id,
+                title = notification.title,
+                category = notification.category.displayName,
+                date = notification.date,
+                url = notification.url,
+                publisher = notification.publisher,
+            )
+        }
+    }
+
+    fun toDomain(): Notification {
+        val categoryEnum = Notification.Category.entries.find { it.displayName == category }
+            ?: Notification.Category.Other
+        return Notification(
+            treeId = treeId,
+            id = id,
+            title = title,
+            category = categoryEnum,
+            date = date,
+            url = url,
+            publisher = publisher
+        )
     }
 }
