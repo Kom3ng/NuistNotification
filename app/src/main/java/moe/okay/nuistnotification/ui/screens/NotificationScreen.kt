@@ -16,14 +16,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -41,38 +37,28 @@ fun NotificationScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("通知") },
-            )
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                . fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            when (val state = uiState) {
-                is UiState.Loading -> {
-                    LoadingContent()
-                }
-                is UiState.Success -> {
-                    if (state.notifications.isEmpty()) {
-                        EmptyContent()
-                    } else {
-                        ListContent(
-                            items = state.notifications,
-                            onItemClick = onItemClick
-                        )
-                    }
-                }
-                is UiState.Error -> {
-                    ErrorContent(
-                        message = state.message,
-                        onRetry = {  }
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        when (val state = uiState) {
+            is UiState.Loading -> {
+                LoadingContent()
+            }
+            is UiState.Success -> {
+                if (state.notifications.isEmpty()) {
+                    EmptyContent()
+                } else {
+                    ListContent(
+                        items = state.notifications,
+                        onItemClick = onItemClick
                     )
                 }
+            }
+            is UiState.Error -> {
+                ErrorContent(
+                    message = state.message,
+                    onRetry = {  }
+                )
             }
         }
     }
