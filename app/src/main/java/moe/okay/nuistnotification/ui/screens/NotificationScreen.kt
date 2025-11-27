@@ -1,6 +1,5 @@
 package moe.okay.nuistnotification.ui.screens
 
-import android.R
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,8 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -31,13 +28,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import moe.okay.nuistnotification.data.Notification
+import moe.okay.nuistnotification.data.News
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun NotificationScreen(
     viewModel: NotificationScreenViewModel,
-    onItemClick: (Notification) -> Unit = {}
+    onItemClick: (News) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -132,8 +129,8 @@ private fun ErrorContent(
 
 @Composable
 private fun NotificationsContent(
-    items: List<Notification>,
-    onItemClick: (Notification) -> Unit
+    items: List<News>,
+    onItemClick: (News) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier. fillMaxSize(),
@@ -154,7 +151,7 @@ private fun NotificationsContent(
 
 @Composable
 private fun NotificationCard(
-    item: Notification,
+    item: News,
     onClick: () -> Unit
 ) {
     OutlinedCard(
@@ -168,26 +165,38 @@ private fun NotificationCard(
                 .padding(16.dp)
         ) {
             Text(
-                text = "[${item.category.displayName}] ${item.title}",
+                text = item.title,
                 style = MaterialTheme.typography.titleMedium,
-                maxLines = 3,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-
+            if (item.summary != null && item.summary.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = item.summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    text = item.category.displayName,
+                    text = item.source,
                     color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
                 Text(
                     text = item.date,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 8.dp)
                 )
             }
         }

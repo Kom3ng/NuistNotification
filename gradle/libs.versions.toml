@@ -19,6 +19,8 @@ roomRuntime = "2.8.4"
 roomKtx = "2.8.4"
 ksp = "2.3.3"
 roomCompiler = "2.8.4"
+core = "0.91.1"
+serialization = "0.91.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -44,6 +46,8 @@ androidx-compose-material-icons-extended = { group = "androidx.compose.material"
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "roomRuntime" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomCompiler" }
+core = { group = "io.github.pdvrieze.xmlutil", name = "core", version.ref = "core" }
+serialization = { group = "io.github.pdvrieze.xmlutil", name = "serialization", version.ref = "serialization" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -2,72 +2,88 @@ package moe.okay.nuistnotification.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import nl.adaptivity.xmlutil.serialization.XmlElement
 
 @Serializable
-data class Notification(
-    val treeId: Int,
+@SerialName("data")
+data class NewsListXml(
+    @XmlElement(true) val data: List<NewsXml>,
+)
+@Serializable
+@SerialName("news")
+data class NewsXml(
     val id: Int,
-    val title: String,
-    val category: Category,
-    val date: String,
-    val url: String,
-    val publisher: String,
+    @XmlElement(true) @SerialName("showTitle") val title: String,
+    @XmlElement(true) @SerialName("wbsourcename") val source: String = "其他",
+    @XmlElement(true) @SerialName("showdidian") val location: String? = null,
+    @XmlElement(true) @SerialName("showbaogaoren") val presenter: String? = null,
+    @XmlElement(true) @SerialName("showbaogaoDate") val presenterDate: String? = null,
+    @XmlElement(true) @SerialName("showzhuchi") val host: String? = null,
+    @XmlElement(true) @SerialName("showDate") val date: String? = null,
+    @XmlElement(true) @SerialName("picUrl") val imageUrl: String? = null,
+    @XmlElement(true) @SerialName("url") val link: String,
+    @XmlElement(true) @SerialName("showAbstract") val summary: String? = null
 ) {
-    @Serializable
-    enum class Category(val displayName: String) {
-        AcademicReports("学术报告"),
-        BiddingInformation("招标信息"),
-        MeetingNotices("会议通知"),
-        PartyAndGovernmentAffairs("党政事务"),
-        OrganizationAndPersonnel("组织人事"),
-        ScientificResearch("科研信息"),
-        AdmissionsAndEmployment("招生就业"),
-        TeachingAndExams("教学考试"),
-        InnovationAndEntrepreneurship("创新创业"),
-        AcademicSeminars("学术研讨"),
-        SpecialLectures("专题讲座"),
-        CampusActivities("校园活动"),
-        CollegeNews("学院动态"),
-        Other("其他"),
+    fun toDomain(): News {
+        return News(
+            id = id,
+            title = title,
+            source = source,
+            date = date ?: "",
+            url = link,
+            summary = summary
+        )
     }
 }
 
-@Entity(tableName = "notifications")
-data class NotificationEntity(
-    val treeId: Int,
+data class News(
     @PrimaryKey val id: Int,
     val title: String,
-    val category: String,
+    val source: String,
     val date: String,
     val url: String,
-    val publisher: String,
-) {
-    companion object {
-        fun from(notification: Notification): NotificationEntity {
-            return NotificationEntity(
-                treeId = notification.treeId,
-                id = notification.id,
-                title = notification.title,
-                category = notification.category.displayName,
-                date = notification.date,
-                url = notification.url,
-                publisher = notification.publisher,
-            )
-        }
-    }
+    val summary: String?,
+)
 
-    fun toDomain(): Notification {
-        val categoryEnum = Notification.Category.entries.find { it.displayName == category }
-            ?: Notification.Category.Other
-        return Notification(
-            treeId = treeId,
+data class Stat(
+    val rowCount: Int,
+    val pageCount:Int,
+    val xmlCount:Int,
+    val xmlPages:Int,
+    val totalPages:Int,
+)
+
+@Entity(tableName = "notifications")
+data class NotificationEntity(
+    @PrimaryKey val id: Int,
+    val title: String,
+    val source: String,
+    val date: String,
+    val url: String,
+    val summary: String?,
+) {
+    fun toDomain(): News{
+        return News(
             id = id,
             title = title,
-            category = categoryEnum,
+            source = source,
             date = date,
             url = url,
-            publisher = publisher
+            summary = summary
         )
+    }
+    companion object {
+        fun from(news: News): NotificationEntity {
+            return NotificationEntity(
+                id = news.id,
+                title = news.title,
+                source = news.source,
+                date = news.date,
+                url = news.url,
+                summary = news.summary
+            )
+        }
     }
 }
