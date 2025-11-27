@@ -23,6 +23,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -32,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import moe.okay.nuistnotification.data.Notification
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun NotificationScreen(
     viewModel: NotificationScreenViewModel,
@@ -40,8 +41,10 @@ fun NotificationScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Box(
-        modifier = Modifier.fillMaxSize()
+    PullToRefreshBox(
+        modifier = Modifier.fillMaxSize(),
+        isRefreshing = uiState is UiState.Loading,
+        onRefresh = { viewModel.refresh() },
     ) {
         when (val state = uiState) {
             is UiState.Loading -> {
