@@ -17,6 +17,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -57,8 +59,8 @@ fun App(modifier: Modifier = Modifier) {
                 AppNavTopBar(navController = navController)
             },
             bottomBar = {
-                NavigationBar {
-                    NavigationBarItem(
+                ShortNavigationBar {
+                    ShortNavigationBarItem(
                         selected = true,
                         onClick = { /*TODO*/ },
                         label = { Text("通知") },
