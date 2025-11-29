@@ -23,7 +23,19 @@ class NotificationRepository(
             val stat = notificationService.getStat()
             val n = notificationService.getPage(stat.xmlPages)
             val news = n.data.map { it.toDomain() }
-            dao.insertAll(news.map(NotificationEntity::from))
+//            dao.insertAll(news.map(NotificationEntity::from))
+            Result.success(news)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun loadMoreNotifications(page: Int): Result<List<News>> = withContext(Dispatchers.IO) {
+        try {
+            val s = notificationService.getStat()
+            val n = notificationService.getPage(s.xmlPages - page + 1)
+            val news = n.data.map { it.toDomain() }
+//            dao.insertAll(news.map(NotificationEntity::from))
             Result.success(news)
         } catch (e: Exception) {
             Result.failure(e)

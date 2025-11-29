@@ -12,9 +12,10 @@ import moe.okay.nuistnotification.data.News
 import moe.okay.nuistnotification.repository.NotificationRepository
 
 sealed class UiState {
+    var currentPage: Int = 1
+    var errorMessage: String? = null
     object Loading : UiState()
     data class Success(val notifications: List<News>) : UiState()
-    data class Error(val message: String) : UiState()
 }
 
 class NotificationScreenViewModel(application: Application) : AndroidViewModel(application) {
@@ -24,27 +25,43 @@ class NotificationScreenViewModel(application: Application) : AndroidViewModel(a
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     init {
-        observeLocal()
-        refresh()
+        initializeFirstPage()
     }
 
-    private fun observeLocal() {
+    fun loadMore() {
+        val currentState = _uiState.value
+        if (currentState !is UiState.Success) return
         viewModelScope.launch {
-            repository.observeAll().collect { list ->
-                _uiState.value = UiState.Success(list)
+            val nextPage = currentState.currentPage + 1
+            val res = repository.loadMoreNotifications(nextPage)
+            if (res.isSuccess) {
+                val newNotifications = res.getOrNull() ?: emptyList()
+                if (newNotifications.isNotEmpty()) {
+                    val updatedList = currentState.notifications + newNotifications
+                    val newState = UiState.Success(updatedList)
+                    newState.currentPage = nextPage
+                    _uiState.value = newState
+                }
+            } else {
+                currentState.errorMessage = res.exceptionOrNull()?.localizedMessage
+                _uiState.value = currentState
             }
         }
     }
 
-
-    fun refresh() {
+    fun initializeFirstPage() {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             val res = repository.refreshNotifications()
             if (res.isSuccess) {
-                _uiState.value = UiState.Success(res.getOrNull() ?: emptyList())
+                val success = UiState.Success(res.getOrNull() ?: emptyList())
+                success.currentPage = 1
+                _uiState.value = success
             } else {
-                _uiState.value = UiState.Error(res.exceptionOrNull()?.message ?: "Refresh failed")
+                val errorState = UiState.Success(emptyList())
+                errorState.errorMessage = res.exceptionOrNull()?.localizedMessage
+                errorState.currentPage = 1
+                _uiState.value = errorState
             }
         }
     }
