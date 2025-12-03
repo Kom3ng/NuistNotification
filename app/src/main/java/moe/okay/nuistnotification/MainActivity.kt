@@ -4,31 +4,49 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ShortNavigationBar
-import androidx.compose.material3.ShortNavigationBarItem
+import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SearchBarScrollBehavior
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import kotlinx.serialization.Serializable
+import kotlinx.coroutines.launch
 import moe.okay.nuistnotification.ui.screens.NotificationScreen
 import moe.okay.nuistnotification.ui.screens.NotificationScreenViewModel
 import moe.okay.nuistnotification.ui.theme.NuistNotificationTheme
@@ -43,71 +61,115 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 fun App(modifier: Modifier = Modifier) {
-    val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
+
     NuistNotificationTheme {
         CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
+            val searchBarScrollBehavior: SearchBarScrollBehavior = SearchBarDefaults.enterAlwaysSearchBarScrollBehavior()
+            val lazyListState = rememberLazyListState()
             Scaffold(
-                modifier = Modifier.fillMaxSize(),
+                modifier = modifier
+                    .fillMaxSize()
+                    .nestedScroll(searchBarScrollBehavior.nestedScrollConnection),
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 topBar = {
-                    AppNavTopBar(navController = navController)
+                    val textFieldState = rememberTextFieldState()
+                    val searchBarState = rememberSearchBarState()
+                    AppBarWithSearch(
+                        modifier = Modifier.padding(4.dp),
+                        colors = SearchBarDefaults.appBarWithSearchColors(
+                            appBarContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            scrolledSearchBarContainerColor = MaterialTheme.colorScheme.surface,
+                            searchBarColors = SearchBarDefaults.colors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
+                        ),
+                        navigationIcon = {
+                            IconButton(
+                                onClick = {}
+                            ) {
+                                Icon(Icons.Default.FilterList, "filter")
+                            }
+                        },
+                        actions = {
+                            IconButton(
+                                onClick = {}
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Settings,
+                                    contentDescription = "settings",
+                                )
+                            }
+                        },
+                        state = searchBarState,
+                        inputField = {
+                            SearchBarDefaults.InputField(
+                                searchBarState = searchBarState,
+                                textFieldState = textFieldState,
+                                onSearch = {},
+                                placeholder = { Text("搜索通知") },
+                            )
+                        },
+                        scrollBehavior = searchBarScrollBehavior
+                    )
                 },
-                bottomBar = {
-                    ShortNavigationBar {
-                        ShortNavigationBarItem(
-                            selected = true,
-                            onClick = { /*TODO*/ },
-                            label = { Text("通知") },
-                            icon = { Icon(Icons.Default.Home, "home") },
-                        )
-                    }
-                },
-                snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+                snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+                floatingActionButton = {
+                    ScrollToTopFab(lazyListState)
+                }
             ) { innerPadding ->
-                AppNavHost(
-                    modifier = Modifier.padding(innerPadding),
-                    navController = navController,
-                )
+                val notificationScreenViewModel: NotificationScreenViewModel = viewModel()
+                LaunchedEffect(Unit) {
+                    notificationScreenViewModel.initializeFirstPage()
+                }
+                Box(
+                    modifier = Modifier.padding(innerPadding)
+                ) {
+                    NotificationScreen(viewModel = notificationScreenViewModel, lazyListState = lazyListState)
+                }
             }
         }
     }
 }
 
 @Composable
-fun AppNavHost(modifier: Modifier = Modifier, navController: NavHostController) {
-    val notificationScreenViewModel: NotificationScreenViewModel = viewModel()
-    NavHost(
-        navController = navController,
-        startDestination = Notifications,
-        modifier = modifier,
-    ) {
-        composable<Notifications> {
-            LaunchedEffect(Unit) {
-                notificationScreenViewModel.initializeFirstPage()
-            }
-            NotificationScreen(notificationScreenViewModel)
+fun ScrollToTopFab(
+    listState: LazyListState,
+    modifier: Modifier = Modifier
+) {
+    val scope = rememberCoroutineScope()
+
+    val showButton by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 0
         }
     }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AppNavTopBar(modifier: Modifier = Modifier, navController: NavHostController) {
-    NavHost(
-        navController = navController,
-        startDestination = Notifications,
-        modifier = modifier,
+    AnimatedVisibility(
+        visible = showButton,
+        enter = scaleIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)),
+        exit = scaleOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)),
+        modifier = modifier
     ) {
-        composable<Notifications> {
-            TopAppBar(
-                title = { Text("通知") },
+        FloatingActionButton(
+            onClick = {
+                scope.launch {
+                    listState.animateScrollToItem(0)
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.KeyboardArrowUp,
+                contentDescription = "Scroll to top"
             )
         }
     }
 }
-
-@Serializable
-object Notifications
