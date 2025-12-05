@@ -31,10 +31,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import moe.okay.nuistnotification.DetailActivity
 import moe.okay.nuistnotification.LocalSnackbarHostState
 import moe.okay.nuistnotification.data.News
 
@@ -42,12 +44,14 @@ import moe.okay.nuistnotification.data.News
 @Composable
 fun NotificationScreen(
     viewModel: NotificationScreenViewModel,
-    onItemClick: (News) -> Unit = {},
     lazyListState: LazyListState
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val globalSnackbarHostState = LocalSnackbarHostState.current
-
+    val context = LocalContext.current
+    val onItemClick = { news: News ->
+        DetailActivity.start(context, news)
+    }
     PullToRefreshBox(
         modifier = Modifier.fillMaxSize(),
         isRefreshing = uiState is UiState.Loading,

@@ -9,6 +9,7 @@ import moe.okay.nuistnotification.data.News
 import moe.okay.nuistnotification.data.NotificationDao
 import moe.okay.nuistnotification.data.NotificationEntity
 import moe.okay.nuistnotification.network.RetrofitClient
+import org.jsoup.nodes.Document
 
 class NotificationRepository(
     private val dao: NotificationDao
@@ -38,6 +39,16 @@ class NotificationRepository(
 //            dao.insertAll(news.map(NotificationEntity::from))
             Result.success(news)
         } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getHtml(url: String) : Result<Document> = withContext(Dispatchers.IO) {
+        try {
+            val doc = notificationService.getHtml(url)
+            Result.success(doc)
+        } catch (e: Exception) {
+            Log.e("NotificationRepository", "Error fetching HTML for URL: $url", e)
             Result.failure(e)
         }
     }

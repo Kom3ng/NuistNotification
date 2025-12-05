@@ -21,6 +21,10 @@ ksp = "2.3.3"
 roomCompiler = "2.8.4"
 core = "0.91.1"
 serialization = "0.91.1"
+appcompat = "1.7.1"
+material = "1.13.0"
+activity = "1.12.0"
+webkit = "1.14.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -48,6 +52,10 @@ androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = 
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomCompiler" }
 core = { group = "io.github.pdvrieze.xmlutil", name = "core", version.ref = "core" }
 serialization = { group = "io.github.pdvrieze.xmlutil", name = "serialization", version.ref = "serialization" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+androidx-webkit = { group = "androidx.webkit", name = "webkit", version.ref = "webkit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

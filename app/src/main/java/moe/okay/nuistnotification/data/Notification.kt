@@ -38,8 +38,9 @@ data class NewsXml(
     }
 }
 
+@Serializable
 data class News(
-    @PrimaryKey val id: Int,
+    val id: Int,
     val title: String,
     val source: String,
     val date: String,

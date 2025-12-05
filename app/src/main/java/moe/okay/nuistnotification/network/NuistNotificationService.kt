@@ -18,6 +18,8 @@ interface NuistNotificationService {
     suspend fun getPage(@Path("index") index: Int): NewsListXml
     @GET("/index/statxml.js")
     suspend fun getStat(): Stat
+    @GET("{url}")
+    suspend fun getHtml(@Path("url", encoded = true) url: String): Document
 }
 
 object RetrofitClient {
