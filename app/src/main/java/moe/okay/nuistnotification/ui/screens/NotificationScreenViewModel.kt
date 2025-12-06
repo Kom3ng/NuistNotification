@@ -19,7 +19,7 @@ sealed class UiState {
 }
 
 class NotificationScreenViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = NotificationRepository(AppDatabase.getInstance(application).notificationDao())
+    private val repository = NotificationRepository(application)
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
