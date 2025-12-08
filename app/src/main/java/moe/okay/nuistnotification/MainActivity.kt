@@ -1,5 +1,6 @@
 package moe.okay.nuistnotification
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -46,12 +47,16 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import moe.okay.nuistnotification.ui.screens.NotificationScreen
 import moe.okay.nuistnotification.ui.screens.NotificationScreenViewModel
 import moe.okay.nuistnotification.ui.theme.NuistNotificationTheme
 
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "notification_prefs")
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

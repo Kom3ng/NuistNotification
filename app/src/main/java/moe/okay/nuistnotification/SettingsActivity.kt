@@ -3,11 +3,13 @@ package moe.okay.nuistnotification
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -56,10 +58,13 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import moe.okay.nuistnotification.data.News
 import moe.okay.nuistnotification.repository.NotificationRepository
+import moe.okay.nuistnotification.repository.PreferenceRepository
 import moe.okay.nuistnotification.ui.theme.NuistNotificationTheme
 import java.util.concurrent.TimeUnit
 
@@ -102,11 +107,15 @@ fun SettingScreen(modifier: Modifier = Modifier, back: () -> Unit = {}) {
         )
     }
 
-    val repository = remember { NotificationRepository(context) }
-    val frequency by repository.observeFrequencySeconds().collectAsState(
+    val notificationRepository = remember { NotificationRepository(context) }
+    val preferenceRepository = remember { PreferenceRepository(context) }
+    val frequency by notificationRepository.observeFrequencySeconds().collectAsState(
         initial = 60*60,
     )
-    val notificationEnabled by repository.observeIsNotificationEnabled().collectAsState(
+    val notificationEnabled by notificationRepository.observeIsNotificationEnabled().collectAsState(
+        initial = false,
+    )
+    val debugWorkerEnabled by preferenceRepository.observeDebugWorkerEnabled().collectAsState(
         initial = false,
     )
 
@@ -129,7 +138,7 @@ fun SettingScreen(modifier: Modifier = Modifier, back: () -> Unit = {}) {
             .build()
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             "NewsPollingWork",
-            ExistingPeriodicWorkPolicy.REPLACE,
+            ExistingPeriodicWorkPolicy.UPDATE,
             periodicRequest
         )
     }
@@ -182,7 +191,7 @@ fun SettingScreen(modifier: Modifier = Modifier, back: () -> Unit = {}) {
                                 permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                             }
                             CoroutineScope(Dispatchers.IO).launch {
-                                repository.setNotificationEnabled(b)
+                                notificationRepository.setNotificationEnabled(b)
                             }
                         }
                     )
@@ -222,13 +231,31 @@ fun SettingScreen(modifier: Modifier = Modifier, back: () -> Unit = {}) {
                                         onClick = {
                                             expanded = false
                                             CoroutineScope(Dispatchers.IO).launch {
-                                                repository.setFrequencySeconds(freq)
+                                                notificationRepository.setFrequencySeconds(freq)
                                             }
                                         }
                                     )
                                 }
                             }
                         }
+                    }
+                }
+                if(BuildConfig.DEBUG) {
+                    Text(text = "调试", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(text = "在轮询时发送通知")
+                        Switch(
+                            checked = debugWorkerEnabled,
+                            onCheckedChange = { b ->
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    preferenceRepository.setDebugWorkerEnabled(b)
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -241,17 +268,33 @@ class NotificationWorker(
     workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams) {
 
-    private val repository = NotificationRepository(context)
+    private val notificationRepository = NotificationRepository(context)
+    private val preferenceRepository = PreferenceRepository(context)
 
     override suspend fun doWork(): Result {
         return try {
-            val news = repository.refreshNotifications().getOrNull() ?: return Result.success()
-            val lastSeenId = repository.getLastSeenId()
+            val news = notificationRepository.refreshNotifications().getOrNull() ?: return Result.success()
+            val lastSeenId = notificationRepository.getLastSeenId()
+            Log.d("NotificationWorker", "Fetched ${news.size} news items, lastSeenId=$lastSeenId")
             val newNews = news.filter { n -> n.id > lastSeenId}.sortedBy { n -> n.id }
             if (!newNews.isEmpty()) {
-                repository.setLastSeenId(newNews.last().id)
+                notificationRepository.setLastSeenId(newNews.maxBy { n-> n.id }.id)
                 if (lastSeenId == 0) {
                     return Result.success()
+                }
+            }
+            if (BuildConfig.DEBUG) {
+                val debugEnabled = preferenceRepository.observeDebugWorkerEnabled().first()
+                if (debugEnabled) {
+                    val testNews = News(
+                        id = (System.currentTimeMillis() / 1000).toInt(),
+                        title = "测试通知",
+                        summary = "后台任务正常工作，获取了${news.size}条，其中${newNews.size}条为新通知",
+                        source = "",
+                        date = "",
+                        url = ""
+                    )
+                    showSystemNotification(context, testNews)
                 }
             }
             newNews.forEach { n ->

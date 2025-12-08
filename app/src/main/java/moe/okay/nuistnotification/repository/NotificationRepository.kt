@@ -16,10 +16,11 @@ import kotlinx.coroutines.withContext
 import moe.okay.nuistnotification.data.AppDatabase
 import moe.okay.nuistnotification.data.News
 import moe.okay.nuistnotification.data.NotificationDao
+import moe.okay.nuistnotification.dataStore
 import moe.okay.nuistnotification.network.RetrofitClient
 import org.jsoup.nodes.Document
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "notification_prefs")
+
 class NotificationRepository(
     private val context: Context,
 ) {
