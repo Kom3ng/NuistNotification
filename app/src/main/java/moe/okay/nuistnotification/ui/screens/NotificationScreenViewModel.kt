@@ -57,6 +57,8 @@ class NotificationScreenViewModel(application: Application) : AndroidViewModel(a
                 val success = UiState.Success(res.getOrNull() ?: emptyList())
                 success.currentPage = 1
                 _uiState.value = success
+                if (success.notifications.isNotEmpty())
+                    repository.setLastSeenId(success.notifications.maxBy { n->n.id }.id)
             } else {
                 val errorState = UiState.Success(emptyList())
                 errorState.errorMessage = res.exceptionOrNull()?.localizedMessage
